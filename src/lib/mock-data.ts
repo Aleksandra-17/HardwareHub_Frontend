@@ -50,16 +50,4 @@ export const auditEntries: AuditEntry[] = [
   { id: 'a4', date: '2025-09-05', action: 'Устройство добавлено', user: 'Система' },
 ];
 
-export const statusLabels: Record<string, string> = {
-  in_use: 'В эксплуатации',
-  reserve: 'В резерве',
-  decommissioned: 'Списано',
-  repair: 'На ремонте',
-};
-
-export const categoryLabels: Record<string, string> = {
-  computing: 'Вычислительная техника',
-  office: 'Оргтехника',
-  network: 'Сетевое оборудование',
-  other: 'Прочее',
-};
+export { statusLabels, categoryLabels } from './labels';
