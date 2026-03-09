@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Monitor, Layers, MapPin, Users, FileText, Settings,
-  Search, Moon, Sun, Menu, X, ChevronLeft
+  Search, Moon, Sun, Menu, X, ChevronLeft, LogOut
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/lib/theme-context';
+import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -26,6 +28,17 @@ interface LayoutProps {
 export default function AppLayout({ children, onGlobalSearch }: LayoutProps) {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await auth.logout();
+      navigate('/login', { replace: true });
+    } catch {
+      auth.clearTokens();
+      navigate('/login', { replace: true });
+    }
+  };
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,12 +120,12 @@ export default function AppLayout({ children, onGlobalSearch }: LayoutProps) {
           </form>
 
           <div className="flex items-center gap-2 ml-auto">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-muted-foreground">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-muted-foreground" title="Тема">
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              А
-            </div>
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground" title="Выйти">
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </header>
 
