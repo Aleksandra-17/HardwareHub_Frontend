@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { api } from '@/lib/api';
+import type { AuditEntry } from '@/lib/types';
 import { toast } from 'sonner';
 
 export default function DeviceDetailPage() {
@@ -123,7 +124,7 @@ export default function DeviceDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {audit.map((a: any) => (
+                {audit.map((a: AuditEntry) => (
                   <tr key={a.id} className="border-b border-border last:border-0">
                     <td className="py-2 text-muted-foreground">{a.date}</td>
                     <td className="py-2">{a.action}</td>

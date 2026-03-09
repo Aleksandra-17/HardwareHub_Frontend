@@ -97,13 +97,13 @@ export const api = {
 
   getDevice: (id: string) => request(`/devices/${id}`),
 
-  createDevice: (data: any) =>
+  createDevice: (data: Record<string, unknown>) =>
     request('/devices', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  updateDevice: (id: string, data: any) =>
+  updateDevice: (id: string, data: Record<string, unknown>) =>
     request(`/devices/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
