@@ -1,10 +1,12 @@
+import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { deviceTypes, locations, people, statusLabels } from '@/lib/mock-data';
+import { api } from '@/lib/api';
+import { statusLabels } from '@/lib/mock-data';
 import { toast } from 'sonner';
 
 interface Props {
@@ -13,6 +15,19 @@ interface Props {
 }
 
 export default function DeviceFormDialog({ open, onOpenChange }: Props) {
+  const { data: deviceTypes = [] } = useQuery({
+    queryKey: ['deviceTypes'],
+    queryFn: () => api.getDeviceTypes(),
+  });
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: () => api.getLocations(),
+  });
+  const { data: people = [] } = useQuery({
+    queryKey: ['people'],
+    queryFn: () => api.getPeople(),
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success('Устройство сохранено (демо)');

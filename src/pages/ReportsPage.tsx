@@ -1,13 +1,23 @@
 import { FileDown, ClipboardList, FileSpreadsheet } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { locations, people } from '@/lib/mock-data';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function ReportsPage() {
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: () => api.getLocations(),
+  });
+  const { data: people = [] } = useQuery({
+    queryKey: ['people'],
+    queryFn: () => api.getPeople(),
+  });
+
   return (
     <div className="space-y-6 max-w-3xl">
       <h1 className="text-2xl font-bold">Отчёты и инвентаризация</h1>
