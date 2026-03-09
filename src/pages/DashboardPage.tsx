@@ -68,7 +68,11 @@ export default function DashboardPage() {
                 <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
                   {statusData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: 'hsl(220,18%,11%)', border: 'none', borderRadius: 8, color: '#fff' }} />
+                <Tooltip
+                  contentStyle={{ background: 'hsl(220,18%,11%)', border: 'none', borderRadius: 8, color: '#fff' }}
+                  labelStyle={{ color: '#fff' }}
+                  itemStyle={{ color: 'hsl(171,65%,55%)' }}
+                />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-3 justify-center mt-2">
@@ -88,7 +92,11 @@ export default function DashboardPage() {
               <BarChart data={typeData} layout="vertical" margin={{ left: 0 }}>
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12, fill: 'hsl(220,10%,55%)' }} />
-                <Tooltip contentStyle={{ background: 'hsl(220,18%,11%)', border: 'none', borderRadius: 8, color: '#fff' }} />
+                <Tooltip
+                  contentStyle={{ background: 'hsl(220,18%,11%)', border: 'none', borderRadius: 8, color: '#fff' }}
+                  labelStyle={{ color: '#fff' }}
+                  itemStyle={{ color: 'hsl(171,65%,55%)' }}
+                />
                 <Bar dataKey="count" fill="hsl(171,65%,46%)" radius={[0, 6, 6, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
