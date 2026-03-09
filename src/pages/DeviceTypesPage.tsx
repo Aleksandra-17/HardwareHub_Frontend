@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Search, Plus } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,22 +11,45 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
-import { categoryLabels } from '@/lib/mock-data';
+import { categoryLabels } from '@/lib/labels';
 import { toast } from 'sonner';
 
 export default function DeviceTypesPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({ name: '', code: '', category: 'computing', description: '' });
 
   const { data: deviceTypes = [], isLoading } = useQuery({
     queryKey: ['deviceTypes'],
     queryFn: () => api.getDeviceTypes(),
   });
 
+  const createMutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) => api.createDeviceType(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deviceTypes'] });
+      toast.success('Тип техники добавлен');
+      setDialogOpen(false);
+      setFormData({ name: '', code: '', category: 'computing', description: '' });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const filtered = useMemo(() =>
-    deviceTypes.filter(t => t.name.toLowerCase().includes(search.toLowerCase()) || t.code.toLowerCase().includes(search.toLowerCase())),
+    deviceTypes.filter(t => {
+      const n = (t.name ?? '').toLowerCase();
+      const c = (t.code ?? '').toLowerCase();
+      const s = search.toLowerCase();
+      return n.includes(s) || c.includes(s);
+    }),
     [deviceTypes, search],
   );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
+  };
 
   if (isLoading) {
     return <div className="space-y-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-32" />)}</div>;
@@ -57,9 +80,9 @@ export default function DeviceTypesPage() {
               {filtered.map(t => (
                 <tr key={t.id} className="border-b border-border last:border-0 hover:bg-muted/50">
                   <td className="py-3 px-4 font-medium">{t.name}</td>
-                  <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{t.code}</td>
-                  <td className="py-3 px-4"><Badge variant="secondary">{categoryLabels[t.category]}</Badge></td>
-                  <td className="py-3 px-4 text-muted-foreground">{t.deviceCount}</td>
+                  <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{t.code ?? '—'}</td>
+                  <td className="py-3 px-4"><Badge variant="secondary">{categoryLabels[t.category ?? 'other'] ?? t.category ?? '—'}</Badge></td>
+                  <td className="py-3 px-4 text-muted-foreground">{t.deviceCount ?? 0}</td>
                 </tr>
               ))}
             </tbody>
@@ -69,17 +92,30 @@ export default function DeviceTypesPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Добавить вид техники</DialogTitle></DialogHeader>
-          <form onSubmit={e => { e.preventDefault(); toast.success('Тип сохранён (демо)'); setDialogOpen(false); }} className="grid gap-4">
-            <div className="space-y-1.5"><Label>Название *</Label><Input required /></div>
-            <div className="space-y-1.5"><Label>Код / стандарт</Label><Input /></div>
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <div className="space-y-1.5">
+              <Label>Название *</Label>
+              <Input required value={formData.name} onChange={e => setFormData(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Код / стандарт</Label>
+              <Input value={formData.code} onChange={e => setFormData(f => ({ ...f, code: e.target.value }))} />
+            </div>
             <div className="space-y-1.5">
               <Label>Категория</Label>
-              <Select><SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
+              <Select value={formData.category} onValueChange={v => setFormData(f => ({ ...f, category: v }))}>
+                <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
                 <SelectContent>{Object.entries(categoryLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5"><Label>Описание</Label><Textarea rows={2} /></div>
-            <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setDialogOpen(false)}>Отмена</Button><Button type="submit">Сохранить</Button></div>
+            <div className="space-y-1.5">
+              <Label>Описание</Label>
+              <Textarea rows={2} value={formData.description} onChange={e => setFormData(f => ({ ...f, description: e.target.value }))} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)}>Отмена</Button>
+              <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? 'Сохранение…' : 'Сохранить'}</Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
