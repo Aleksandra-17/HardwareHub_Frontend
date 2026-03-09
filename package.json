@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "docker:build": "docker build -f docker/Dockerfile -t hardwarehub-frontend .",
+    "docker:run": "docker run -p 8080:80 hardwarehub-frontend"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
