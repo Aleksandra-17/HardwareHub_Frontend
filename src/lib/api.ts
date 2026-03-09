@@ -66,6 +66,8 @@ export const api = {
 
   // Device Types
   getDeviceTypes: () => request('/device-types'),
+  createDeviceType: (data: Record<string, unknown>) =>
+    request('/device-types', { method: 'POST', body: JSON.stringify(data) }),
 
   // Locations
   getLocations: () => request('/locations'),
