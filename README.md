@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# HardwareHub Frontend
 
-## Project info
+Веб-приложение для учёта техники: устройства, типы устройств, локации, ответственные лица, отчёты и инвентаризация.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Стек
 
-## How can I edit this code?
+- **Vite** — сборка
+- **React 18** + **TypeScript**
+- **shadcn/ui** + **Tailwind CSS**
+- **React Query** — кэширование данных (для будущей интеграции с API)
+- **Vitest** + **Testing Library** — тесты
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Быстрый старт
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Клонирование
+git clone <repo-url>
+cd HardwareHub-Frontend
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Установка зависимостей
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Запуск dev-сервера
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Приложение откроется на http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Скрипты
 
-**Use GitHub Codespaces**
+| Команда | Описание |
+|---------|----------|
+| `npm run dev` | Dev-сервер с hot reload |
+| `npm run build` | Production-сборка в `dist/` |
+| `npm run preview` | Просмотр production-сборки |
+| `npm run lint` | ESLint |
+| `npm run test` | Vitest (разовый прогон) |
+| `npm run test:watch` | Vitest в watch-режиме |
+| `npm run docker:build` | Сборка Docker-образа |
+| `npm run docker:run` | Запуск контейнера (порт 8080) |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Docker
 
-## What technologies are used for this project?
+```sh
+npm run docker:build
+npm run docker:run
+```
 
-This project is built with:
+Приложение доступно на http://localhost:8080
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Структура проекта
 
-## How can I deploy this project?
+```
+src/
+├── components/     # UI-компоненты
+├── lib/            # Утилиты, типы, mock-данные
+├── pages/          # Страницы приложения
+├── test/           # Setup и тесты
+└── hooks/
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Связь с бэкендом
 
-## Can I connect a custom domain to my Lovable project?
+Сейчас приложение работает на **mock-данных** (`src/lib/mock-data.ts`).
 
-Yes, you can!
+Чтобы подключить свой бэкенд, см. **[документацию API](docs/BACKEND_API.md)** — там описаны модели данных, эндпоинты и форматы запросов/ответов.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## CI/CD
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+GitHub Actions при push/PR на `main`/`master`:
+
+- **Lint** — ESLint
+- **Test** — Vitest
