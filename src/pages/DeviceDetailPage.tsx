@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Wrench, QrCode } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 export default function DeviceDetailPage() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
 
   const { data: device, isLoading: deviceLoading } = useQuery({
     queryKey: ['device', id],
@@ -37,6 +38,32 @@ export default function DeviceDetailPage() {
   const { data: people = [] } = useQuery({
     queryKey: ['people'],
     queryFn: () => api.getPeople(),
+  });
+
+  const sendToRepairMutation = useMutation({
+    mutationFn: () => api.updateDevice(id!, { status: 'repair' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['device', id] });
+      queryClient.invalidateQueries({ queryKey: ['deviceAudit', id] });
+      toast.success('Устройство отправлено на ремонт');
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const scrappedMutation = useMutation({
+    mutationFn: () => api.updateDevice(id!, { status: 'scrapped' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['device', id] });
+      queryClient.invalidateQueries({ queryKey: ['deviceAudit', id] });
+      toast.success('Устройство списано');
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const qrCodeMutation = useMutation({
+    mutationFn: () => api.generateQRCode(id!),
+    onSuccess: () => toast.success('QR-код сгенерирован'),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   if (deviceLoading) {
@@ -81,10 +108,35 @@ export default function DeviceDetailPage() {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={() => toast.info('Редактирование (демо)')}><Edit className="h-4 w-4 mr-1" />Редактировать</Button>
-        <Button variant="outline" size="sm" onClick={() => toast.info('Отправлено на ремонт (демо)')}><Wrench className="h-4 w-4 mr-1" />На ремонт</Button>
-        <Button variant="outline" size="sm" className="text-destructive" onClick={() => toast.info('Списание (демо)')}><Trash2 className="h-4 w-4 mr-1" />Списать</Button>
-        <Button variant="outline" size="sm" onClick={() => toast.info('QR-код (демо)')}><QrCode className="h-4 w-4 mr-1" />QR-код</Button>
+        <Button variant="outline" size="sm" disabled><Edit className="h-4 w-4 mr-1" />Редактировать</Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => sendToRepairMutation.mutate()}
+          disabled={sendToRepairMutation.isPending}
+        >
+          <Wrench className="h-4 w-4 mr-1" />
+          {sendToRepairMutation.isPending ? 'Отправка…' : 'На ремонт'}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-destructive"
+          onClick={() => scrappedMutation.mutate()}
+          disabled={scrappedMutation.isPending}
+        >
+          <Trash2 className="h-4 w-4 mr-1" />
+          {scrappedMutation.isPending ? 'Списание…' : 'Списать'}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => qrCodeMutation.mutate()}
+          disabled={qrCodeMutation.isPending}
+        >
+          <QrCode className="h-4 w-4 mr-1" />
+          {qrCodeMutation.isPending ? 'Генерация…' : 'QR-код'}
+        </Button>
       </div>
 
       {/* Details */}
