@@ -124,16 +124,19 @@ export const api = {
 
   getDeviceAudit: (id: string) => request(`/devices/${id}/audit`),
 
-  // Reports
-  exportDevices: (format: 'csv' | 'xlsx', params?: { locationId?: string; personId?: string }) => {
-    const queryString = new URLSearchParams();
-    queryString.append('format', format);
-    if (params?.locationId) queryString.append('locationId', params.locationId);
-    if (params?.personId) queryString.append('personId', params.personId);
-    return `${API_URL}/reports/devices/export?${queryString.toString()}`;
-  },
+  generateQRCode: (id: string) =>
+    request(`/devices/${id}/qr-code`, {
+      method: 'POST',
+    }),
 
-  createInventoryReport: (data: { locationId: string; personId: string; dateFrom: string; dateTo: string }) =>
+  // Reports
+  exportDevices: (format: 'csv' | 'xlsx', params?: { locationId?: string; personId?: string }) =>
+    request('/reports/devices/export', {
+      method: 'POST',
+      body: JSON.stringify({ format, ...params }),
+    }),
+
+  generateInventoryReport: (data: Record<string, unknown>) =>
     request('/reports/inventory', {
       method: 'POST',
       body: JSON.stringify(data),
