@@ -1,0 +1,138 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+class ApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const url = `${API_URL}${endpoint}`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  const accessToken = localStorage.getItem('access_token');
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new ApiError(response.status, errorData.detail || `HTTP ${response.status}`);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json();
+}
+
+export const api = {
+  // Auth
+  login: (username: string, password: string) =>
+    request<{ access_token: string; refresh_token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+
+  refresh: (refreshToken: string) =>
+    request<{ access_token: string; refresh_token: string }>('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    }),
+
+  logout: (refreshToken?: string) =>
+    request('/auth/logout', {
+      method: 'POST',
+      body: refreshToken ? JSON.stringify({ refresh_token: refreshToken }) : undefined,
+    }),
+
+  getMe: () => request('/auth/me'),
+
+  // Device Types
+  getDeviceTypes: () => request('/device-types'),
+
+  // Locations
+  getLocations: () => request('/locations'),
+
+  // People
+  getPeople: () => request('/people'),
+
+  // Devices
+  getDevices: (params?: {
+    search?: string;
+    status?: string;
+    type?: string;
+    location?: string;
+    person?: string;
+    sort?: string;
+    order?: 'asc' | 'desc';
+  }) => {
+    const queryString = new URLSearchParams();
+    if (params?.search) queryString.append('search', params.search);
+    if (params?.status) queryString.append('status', params.status);
+    if (params?.type) queryString.append('type', params.type);
+    if (params?.location) queryString.append('location', params.location);
+    if (params?.person) queryString.append('person', params.person);
+    if (params?.sort) queryString.append('sort', params.sort);
+    if (params?.order) queryString.append('order', params.order);
+    const qs = queryString.toString();
+    return request(`/devices${qs ? '?' + qs : ''}`);
+  },
+
+  getDevice: (id: string) => request(`/devices/${id}`),
+
+  createDevice: (data: any) =>
+    request('/devices', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateDevice: (id: string, data: any) =>
+    request(`/devices/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteDevice: (id: string) =>
+    request(`/devices/${id}`, {
+      method: 'DELETE',
+    }),
+
+  getDeviceAudit: (id: string) => request(`/devices/${id}/audit`),
+
+  // Reports
+  exportDevices: (format: 'csv' | 'xlsx', params?: { locationId?: string; personId?: string }) => {
+    const queryString = new URLSearchParams();
+    queryString.append('format', format);
+    if (params?.locationId) queryString.append('locationId', params.locationId);
+    if (params?.personId) queryString.append('personId', params.personId);
+    return `${API_URL}/reports/devices/export?${queryString.toString()}`;
+  },
+
+  createInventoryReport: (data: { locationId: string; personId: string; dateFrom: string; dateTo: string }) =>
+    request('/reports/inventory', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Health
+  health: () => request('/root/health'),
+};
+
+export { ApiError };

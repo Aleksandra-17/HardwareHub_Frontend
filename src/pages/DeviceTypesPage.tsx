@@ -1,21 +1,36 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, Plus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { deviceTypes, categoryLabels } from '@/lib/mock-data';
+import { api } from '@/lib/api';
+import { categoryLabels } from '@/lib/mock-data';
 import { toast } from 'sonner';
 
 export default function DeviceTypesPage() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const filtered = deviceTypes.filter(t => t.name.toLowerCase().includes(search.toLowerCase()) || t.code.toLowerCase().includes(search.toLowerCase()));
+  const { data: deviceTypes = [], isLoading } = useQuery({
+    queryKey: ['deviceTypes'],
+    queryFn: () => api.getDeviceTypes(),
+  });
+
+  const filtered = useMemo(() =>
+    deviceTypes.filter(t => t.name.toLowerCase().includes(search.toLowerCase()) || t.code.toLowerCase().includes(search.toLowerCase())),
+    [deviceTypes, search],
+  );
+
+  if (isLoading) {
+    return <div className="space-y-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-32" />)}</div>;
+  }
 
   return (
     <div className="space-y-4">

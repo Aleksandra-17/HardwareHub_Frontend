@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Search, Filter, Laptop, Monitor as MonitorIcon, Printer, Server, Wifi, Projector } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/StatusBadge';
-import { devices, deviceTypes, locations, people, statusLabels } from '@/lib/mock-data';
+import { api } from '@/lib/api';
+import { statusLabels } from '@/lib/mock-data';
 import { DeviceStatus } from '@/lib/types';
 import DeviceFormDialog from '@/components/DeviceFormDialog';
 
@@ -26,25 +29,36 @@ export default function DevicesPage() {
   const [sortField, setSortField] = useState<string>('inventoryNumber');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-  const filtered = useMemo(() => {
-    let list = [...devices];
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(d => d.inventoryNumber.toLowerCase().includes(q) || d.name.toLowerCase().includes(q) || d.serialNumber.toLowerCase().includes(q));
-    }
-    if (statusFilter !== 'all') list = list.filter(d => d.status === statusFilter);
-    if (typeFilter !== 'all') list = list.filter(d => d.deviceTypeId === typeFilter);
-    if (locationFilter !== 'all') list = list.filter(d => d.locationId === locationFilter);
-    if (personFilter !== 'all') list = list.filter(d => d.personId === personFilter);
+  const { data: devices = [], isLoading: devicesLoading } = useQuery({
+    queryKey: ['devices', { search, statusFilter, typeFilter, locationFilter, personFilter, sortField, sortDir }],
+    queryFn: () =>
+      api.getDevices({
+        search: search || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        location: locationFilter !== 'all' ? locationFilter : undefined,
+        person: personFilter !== 'all' ? personFilter : undefined,
+        sort: sortField,
+        order: sortDir,
+      }),
+  });
 
-    list.sort((a, b) => {
-      const av = (a as Record<string, unknown>)[sortField] ?? '';
-      const bv = (b as Record<string, unknown>)[sortField] ?? '';
-      const cmp = String(av).localeCompare(String(bv));
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-    return list;
-  }, [search, statusFilter, typeFilter, locationFilter, personFilter, sortField, sortDir]);
+  const { data: deviceTypes = [] } = useQuery({
+    queryKey: ['deviceTypes'],
+    queryFn: () => api.getDeviceTypes(),
+  });
+
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: () => api.getLocations(),
+  });
+
+  const { data: people = [] } = useQuery({
+    queryKey: ['people'],
+    queryFn: () => api.getPeople(),
+  });
+
+  const filtered = devices;
 
   const toggleSort = (field: string) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -56,6 +70,17 @@ export default function DevicesPage() {
       {children} {sortField === field && (sortDir === 'asc' ? '↑' : '↓')}
     </th>
   );
+
+  if (devicesLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-64" />
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

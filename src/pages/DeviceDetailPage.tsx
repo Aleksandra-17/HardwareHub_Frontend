@@ -1,14 +1,46 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Wrench, QrCode } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
-import { devices, deviceTypes, locations, people, auditEntries } from '@/lib/mock-data';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function DeviceDetailPage() {
   const { id } = useParams();
-  const device = devices.find(d => d.id === id);
+
+  const { data: device, isLoading: deviceLoading } = useQuery({
+    queryKey: ['device', id],
+    queryFn: () => api.getDevice(id!),
+    enabled: !!id,
+  });
+
+  const { data: audit = [], isLoading: auditLoading } = useQuery({
+    queryKey: ['deviceAudit', id],
+    queryFn: () => api.getDeviceAudit(id!),
+    enabled: !!id,
+  });
+
+  const { data: deviceTypes = [] } = useQuery({
+    queryKey: ['deviceTypes'],
+    queryFn: () => api.getDeviceTypes(),
+  });
+
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: () => api.getLocations(),
+  });
+
+  const { data: people = [] } = useQuery({
+    queryKey: ['people'],
+    queryFn: () => api.getPeople(),
+  });
+
+  if (deviceLoading) {
+    return <Skeleton className="h-96 w-full" />;
+  }
 
   if (!device) return (
     <div className="flex flex-col items-center justify-center py-20">
@@ -79,24 +111,28 @@ export default function DeviceDetailPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">История изменений</CardTitle></CardHeader>
         <CardContent>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-muted-foreground">
-                <th className="text-left pb-2 font-medium">Дата</th>
-                <th className="text-left pb-2 font-medium">Действие</th>
-                <th className="text-left pb-2 font-medium">Пользователь</th>
-              </tr>
-            </thead>
-            <tbody>
-              {auditEntries.map(a => (
-                <tr key={a.id} className="border-b border-border last:border-0">
-                  <td className="py-2 text-muted-foreground">{a.date}</td>
-                  <td className="py-2">{a.action}</td>
-                  <td className="py-2 text-muted-foreground">{a.user}</td>
+          {auditLoading ? (
+            <Skeleton className="h-32" />
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left pb-2 font-medium">Дата</th>
+                  <th className="text-left pb-2 font-medium">Действие</th>
+                  <th className="text-left pb-2 font-medium">Пользователь</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {audit.map((a: any) => (
+                  <tr key={a.id} className="border-b border-border last:border-0">
+                    <td className="py-2 text-muted-foreground">{a.date}</td>
+                    <td className="py-2">{a.action}</td>
+                    <td className="py-2 text-muted-foreground">{a.user}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </CardContent>
       </Card>
     </div>

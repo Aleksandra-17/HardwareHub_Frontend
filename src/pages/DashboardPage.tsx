@@ -1,17 +1,32 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Monitor, Wrench, Archive, AlertTriangle, Users, MapPin, Plus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { devices, deviceTypes, locations, people, statusLabels } from '@/lib/mock-data';
+import { api } from '@/lib/api';
+import { statusLabels } from '@/lib/mock-data';
 import { DeviceStatus } from '@/lib/types';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const PIE_COLORS = ['hsl(171,65%,46%)', 'hsl(210,75%,58%)', 'hsl(220,10%,55%)', 'hsl(38,92%,55%)'];
 
 export default function DashboardPage() {
+  const { data: devices = [], isLoading: devicesLoading } = useQuery({
+    queryKey: ['devices'],
+    queryFn: () => api.getDevices(),
+  });
+
+  const { data: deviceTypes = [], isLoading: typesLoading } = useQuery({
+    queryKey: ['deviceTypes'],
+    queryFn: () => api.getDeviceTypes(),
+  });
+
+  const isLoading = devicesLoading || typesLoading;
+
   const stats = useMemo(() => {
     const byStatus = { in_use: 0, reserve: 0, decommissioned: 0, repair: 0 };
     let noResponsible = 0, noLocation = 0;
@@ -21,7 +36,7 @@ export default function DashboardPage() {
       if (!d.locationId) noLocation++;
     });
     return { total: devices.length, byStatus, noResponsible, noLocation };
-  }, []);
+  }, [devices]);
 
   const statusData = Object.entries(stats.byStatus).map(([key, value]) => ({
     name: statusLabels[key], value
@@ -34,9 +49,23 @@ export default function DashboardPage() {
       if (dt) map[dt.name] = (map[dt.name] || 0) + 1;
     });
     return Object.entries(map).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-  }, []);
+  }, [devices, deviceTypes]);
 
-  const recentDevices = [...devices].sort((a, b) => b.commissionDate.localeCompare(a.commissionDate)).slice(0, 5);
+  const recentDevices = useMemo(() =>
+    [...devices].sort((a, b) => b.commissionDate.localeCompare(a.commissionDate)).slice(0, 5),
+    [devices],
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
