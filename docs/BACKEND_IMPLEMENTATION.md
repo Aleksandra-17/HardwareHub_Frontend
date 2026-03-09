@@ -162,6 +162,43 @@ Authorization: Bearer {access_token}
 - Должны быть предзагруженные типы в БД
 - Читается часто, кэширование на клиенте рекомендуется
 - Предустановленные типы: Ноутбук, ПК, Монитор, Принтер, Сканер, МФУ, Сервер, Коммутатор и т.д.
+- Расширенный формат ответа (опционально): `id`, `name`, `code`, `category`, `description`, `deviceCount`
+
+---
+
+### POST /device-types
+
+Создать новый тип устройства (требует авторизации).
+
+**Request:**
+```json
+{
+  "name": "Ноутбук",
+  "code": "NB-001",
+  "category": "computing",
+  "description": "Портативный компьютер"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "uuid",
+  "name": "Ноутбук",
+  "code": "NB-001",
+  "category": "computing",
+  "description": "Портативный компьютер",
+  "deviceCount": 0
+}
+```
+
+**Errors:**
+- `400 Bad Request` - name или code уже существуют
+- `422 Unprocessable Entity` - ошибка валидации
+
+**Примечания:**
+- `category`: computing | office | network | other
+- `deviceCount` вычисляется автоматически (количество устройств данного типа)
 
 ---
 
