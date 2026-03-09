@@ -69,9 +69,17 @@ export const api = {
 
   // Locations
   getLocations: () => request('/locations'),
+  createLocation: (data: Record<string, unknown>) =>
+    request('/locations', { method: 'POST', body: JSON.stringify(data) }),
+  deleteLocation: (id: string) =>
+    request(`/locations/${id}`, { method: 'DELETE' }),
 
   // People
   getPeople: () => request('/people'),
+  createPerson: (data: Record<string, unknown>) =>
+    request('/people', { method: 'POST', body: JSON.stringify(data) }),
+  deletePerson: (id: string) =>
+    request(`/people/${id}`, { method: 'DELETE' }),
 
   // Devices
   getDevices: (params?: {
