@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { DeviceStatus } from '@/lib/types';
-import { statusLabels } from '@/lib/mock-data';
+import { statusLabels } from '@/lib/labels';
 
 const statusColors: Record<DeviceStatus, string> = {
   in_use: 'bg-success/15 text-success border-success/30',

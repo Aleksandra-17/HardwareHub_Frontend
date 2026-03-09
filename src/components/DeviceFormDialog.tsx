@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
-import { statusLabels } from '@/lib/mock-data';
+import { statusLabels } from '@/lib/labels';
 import { toast } from 'sonner';
 
 interface Props {

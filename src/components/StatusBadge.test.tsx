@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { StatusBadge } from "./StatusBadge";
-import { statusLabels } from "@/lib/mock-data";
+import { statusLabels } from "@/lib/labels";
 
 describe("StatusBadge", () => {
   it("renders in_use status", () => {

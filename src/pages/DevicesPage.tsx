@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/StatusBadge';
 import { api } from '@/lib/api';
-import { statusLabels } from '@/lib/mock-data';
+import { statusLabels } from '@/lib/labels';
 import { DeviceStatus } from '@/lib/types';
 import DeviceFormDialog from '@/components/DeviceFormDialog';
 

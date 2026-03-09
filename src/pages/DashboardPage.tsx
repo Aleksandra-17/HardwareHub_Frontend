@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { api } from '@/lib/api';
-import { statusLabels } from '@/lib/mock-data';
+import { statusLabels } from '@/lib/labels';
 import { DeviceStatus } from '@/lib/types';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -98,9 +98,18 @@ export default function DashboardPage() {
                   {statusData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: 'hsl(220,18%,11%)', border: 'none', borderRadius: 8, color: '#fff' }}
-                  labelStyle={{ color: '#fff' }}
-                  itemStyle={{ color: 'hsl(171,65%,55%)' }}
+                  content={({ active, payload }) =>
+                    active && payload?.length ? (
+                      <div
+                        className="rounded-lg border-0 px-3 py-2 text-sm shadow-md"
+                        style={{ background: 'hsl(220,18%,11%)', color: '#fff' }}
+                      >
+                        <p className="font-medium">{payload[0]?.payload?.name}</p>
+                        <p style={{ color: 'hsl(171,65%,55%)' }}>value: {payload[0]?.value}</p>
+                      </div>
+                    ) : null
+                  }
+                  cursor={false}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -117,18 +126,33 @@ export default function DashboardPage() {
         <Card>
           <CardHeader><CardTitle className="text-base">По типам техники</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={typeData} layout="vertical" margin={{ left: 0 }}>
-                <XAxis type="number" hide />
-                <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12, fill: 'hsl(220,10%,55%)' }} />
-                <Tooltip
-                  contentStyle={{ background: 'hsl(220,18%,11%)', border: 'none', borderRadius: 8, color: '#fff' }}
-                  labelStyle={{ color: '#fff' }}
-                  itemStyle={{ color: 'hsl(171,65%,55%)' }}
-                />
-                <Bar dataKey="count" fill="hsl(171,65%,46%)" radius={[0, 6, 6, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
+            {typeData.length === 0 ? (
+              <div className="flex h-[250px] items-center justify-center text-sm text-muted-foreground">
+                Нет данных
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={typeData} layout="vertical" margin={{ left: 0 }}>
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12, fill: 'hsl(220,10%,55%)' }} />
+                  <Tooltip
+                    content={({ active, payload }) =>
+                      active && payload?.length ? (
+                        <div
+                          className="rounded-lg border-0 px-3 py-2 text-sm shadow-md"
+                          style={{ background: 'hsl(220,18%,11%)', color: '#fff' }}
+                        >
+                          <p className="font-medium">{payload[0]?.payload?.name}</p>
+                          <p style={{ color: 'hsl(171,65%,55%)' }}>count: {payload[0]?.value}</p>
+                        </div>
+                      ) : null
+                    }
+                    cursor={false}
+                  />
+                  <Bar dataKey="count" fill="hsl(171,65%,46%)" radius={[0, 6, 6, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
