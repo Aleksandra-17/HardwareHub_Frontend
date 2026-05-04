@@ -4,27 +4,29 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import PeoplePage from './PeoplePage';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: false },
-  },
-});
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, staleTime: Infinity },
+    },
+  });
+}
 
-function Wrapper({ children }: { children: React.ReactNode }) {
-  return (
+function renderPage() {
+  const queryClient = createTestQueryClient();
+  queryClient.setQueryData(['people'], []);
+  return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{children}</MemoryRouter>
-    </QueryClientProvider>
+      <MemoryRouter>
+        <PeoplePage />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
 describe('PeoplePage', () => {
   it('renders header and add button', () => {
-    render(
-      <Wrapper>
-        <PeoplePage />
-      </Wrapper>,
-    );
+    renderPage();
     expect(screen.getByText('Ответственные')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /добавить/i })).toBeInTheDocument();
   });

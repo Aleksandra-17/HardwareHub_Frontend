@@ -33,6 +33,6 @@ describe('api', () => {
   it('has device types and reports', () => {
     expect(typeof api.getDeviceTypes).toBe('function');
     expect(typeof api.exportDevices).toBe('function');
-    expect(typeof api.createInventoryReport).toBe('function');
+    expect(typeof api.generateInventoryReport).toBe('function');
   });
 });
