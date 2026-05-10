@@ -9,18 +9,23 @@ describe("StatusBadge", () => {
     expect(screen.getByText(statusLabels.in_use)).toBeInTheDocument();
   });
 
-  it("renders reserve status", () => {
-    render(<StatusBadge status="reserve" />);
-    expect(screen.getByText(statusLabels.reserve)).toBeInTheDocument();
-  });
-
-  it("renders decommissioned status", () => {
-    render(<StatusBadge status="decommissioned" />);
-    expect(screen.getByText(statusLabels.decommissioned)).toBeInTheDocument();
-  });
-
   it("renders repair status", () => {
     render(<StatusBadge status="repair" />);
     expect(screen.getByText(statusLabels.repair)).toBeInTheDocument();
+  });
+
+  it("renders scrapped status", () => {
+    render(<StatusBadge status="scrapped" />);
+    expect(screen.getByText(statusLabels.scrapped)).toBeInTheDocument();
+  });
+
+  it("renders archived status", () => {
+    render(<StatusBadge status="archived" />);
+    expect(screen.getByText(statusLabels.archived)).toBeInTheDocument();
+  });
+
+  it("shows raw status key for unknown statuses", () => {
+    render(<StatusBadge status="legacy_unknown" />);
+    expect(screen.getByText("legacy_unknown")).toBeInTheDocument();
   });
 });

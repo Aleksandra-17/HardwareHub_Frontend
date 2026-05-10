@@ -8,12 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
 import { statusLabels } from '@/lib/labels';
+import type { DeviceType, Location, Person } from '@/lib/types';
 import { toast } from 'sonner';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+/** Значение селекта, когда ответственный не выбран (в API поле опционально). */
+const NO_PERSON_VALUE = '__no_person__';
 
 export default function DeviceFormDialog({ open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
@@ -35,15 +39,15 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
 
   const { data: deviceTypes = [] } = useQuery({
     queryKey: ['deviceTypes'],
-    queryFn: () => api.getDeviceTypes(),
+    queryFn: () => api.getDeviceTypes() as Promise<DeviceType[]>,
   });
   const { data: locations = [] } = useQuery({
     queryKey: ['locations'],
-    queryFn: () => api.getLocations(),
+    queryFn: () => api.getLocations() as Promise<Location[]>,
   });
   const { data: people = [] } = useQuery({
     queryKey: ['people'],
-    queryFn: () => api.getPeople(),
+    queryFn: () => api.getPeople() as Promise<Person[]>,
   });
 
   const createMutation = useMutation({
@@ -73,9 +77,13 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const { purchasePrice, personId, commissionDate, purchaseDate, ...rest } = formData;
     createMutation.mutate({
-      ...formData,
-      purchasePrice: formData.purchasePrice ? Number(formData.purchasePrice) : undefined,
+      ...rest,
+      ...(purchasePrice ? { purchasePrice: Number(purchasePrice) } : {}),
+      ...(personId ? { personId } : {}),
+      ...(commissionDate ? { commissionDate } : {}),
+      ...(purchaseDate ? { purchaseDate } : {}),
     });
   };
 
@@ -113,7 +121,7 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label>Статус *</Label>
-            <Select value={formData.status} onValueChange={v => setFormData(f => ({ ...f, status: v }))}>
+            <Select value={formData.status} onValueChange={v => setFormData(f => ({ ...f, status: v }))} required>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
             </Select>
@@ -148,10 +156,25 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Ответственный *</Label>
-            <Select value={formData.personId} onValueChange={v => setFormData(f => ({ ...f, personId: v }))} required>
-              <SelectTrigger><SelectValue placeholder="Выберите ответственного" /></SelectTrigger>
-              <SelectContent>{people.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName}</SelectItem>)}</SelectContent>
+            <Label>Ответственный</Label>
+            <Select
+              value={formData.personId || NO_PERSON_VALUE}
+              onValueChange={v =>
+                setFormData(f => ({
+                  ...f,
+                  personId: v === NO_PERSON_VALUE ? '' : v,
+                }))
+              }
+            >
+              <SelectTrigger><SelectValue placeholder="Не назначен" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_PERSON_VALUE}>Не назначен</SelectItem>
+                {people.map(p => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">

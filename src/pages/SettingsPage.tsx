@@ -19,21 +19,23 @@ export default function SettingsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-muted-foreground">
-                <th className="text-left pb-2 font-medium">Роль</th>
-                <th className="text-left pb-2 font-medium">Уровень</th>
-                <th className="text-left pb-2 font-medium">Описание</th>
+                <th className="text-center px-3 py-3 font-medium align-middle">Роль</th>
+                <th className="text-center px-3 py-3 font-medium align-middle">Уровень</th>
+                <th className="text-center px-3 py-3 font-medium align-middle">Описание</th>
               </tr>
             </thead>
             <tbody>
               {roles.map(r => (
                 <tr key={r.name} className="border-b border-border last:border-0">
-                  <td className="py-3 font-medium">{r.name}</td>
-                  <td className="py-3">
-                    <Badge variant={r.level === 'full' ? 'default' : 'secondary'}>
-                      {r.level === 'full' ? 'Полный' : r.level === 'mid' ? 'Средний' : 'Базовый'}
-                    </Badge>
+                  <td className="px-3 py-3 text-center align-middle font-medium">{r.name}</td>
+                  <td className="px-3 py-3 align-middle">
+                    <div className="flex justify-center">
+                      <Badge variant={r.level === 'full' ? 'default' : 'secondary'}>
+                        {r.level === 'full' ? 'Полный' : r.level === 'mid' ? 'Средний' : 'Базовый'}
+                      </Badge>
+                    </div>
                   </td>
-                  <td className="py-3 text-muted-foreground">{r.description}</td>
+                  <td className="px-3 py-3 text-center align-middle text-muted-foreground">{r.description}</td>
                 </tr>
               ))}
             </tbody>

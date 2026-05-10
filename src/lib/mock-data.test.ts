@@ -11,7 +11,7 @@ import {
 describe("mock-data", () => {
   describe("statusLabels", () => {
     it("has labels for all device statuses", () => {
-      const statuses = ["in_use", "reserve", "decommissioned", "repair"];
+      const statuses = ["in_use", "repair", "scrapped", "archived"];
       statuses.forEach((status) => {
         expect(statusLabels[status]).toBeDefined();
         expect(typeof statusLabels[status]).toBe("string");
@@ -48,7 +48,7 @@ describe("mock-data", () => {
 
   describe("devices", () => {
     it("has valid status values", () => {
-      const validStatuses = ["in_use", "reserve", "decommissioned", "repair"];
+      const validStatuses = ["in_use", "repair", "scrapped", "archived"];
       devices.forEach((d) => {
         expect(validStatuses).toContain(d.status);
       });

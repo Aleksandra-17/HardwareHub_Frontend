@@ -1,4 +1,5 @@
-export type DeviceStatus = 'in_use' | 'reserve' | 'decommissioned' | 'repair';
+/** Совпадает с DeviceStatus в API (Alembic / Pydantic). */
+export type DeviceStatus = 'in_use' | 'repair' | 'scrapped' | 'archived';
 
 export interface DeviceType {
   id: string;
@@ -32,19 +33,19 @@ export interface Device {
   id: string;
   inventoryNumber: string;
   name: string;
-  deviceTypeId: string;
-  serialNumber: string;
-  model: string;
-  manufacturer: string;
+  deviceTypeId: string | null;
+  serialNumber: string | null;
+  model: string | null;
+  manufacturer: string | null;
   status: DeviceStatus;
-  locationId: string;
-  personId: string;
-  commissionDate: string;
-  lastCheckDate: string;
-  notes: string;
-  purchasePrice: number;
-  purchaseDate: string;
-  qrCode: string;
+  locationId: string | null;
+  personId: string | null;
+  commissionDate: string | null;
+  lastCheckDate: string | null;
+  notes: string | null;
+  purchasePrice: number | string | null;
+  purchaseDate: string | null;
+  qrCode: string | null;
 }
 
 export interface AuditEntry {

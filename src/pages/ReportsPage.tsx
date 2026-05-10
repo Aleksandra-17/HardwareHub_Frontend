@@ -49,6 +49,10 @@ export default function ReportsPage() {
 
   const handleInventorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!inventoryForm.locationId || !inventoryForm.personId || !inventoryForm.startDate || !inventoryForm.endDate) {
+      toast.error('Заполните кабинет, ответственное лицо и период дат');
+      return;
+    }
     inventoryMutation.mutate(inventoryForm);
   };
 
@@ -83,31 +87,33 @@ export default function ReportsPage() {
         <CardContent>
           <form onSubmit={handleInventorySubmit} className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Кабинет</Label>
-              <Select value={inventoryForm.locationId} onValueChange={v => setInventoryForm(f => ({ ...f, locationId: v }))}>
+              <Label>Кабинет *</Label>
+              <Select value={inventoryForm.locationId} onValueChange={v => setInventoryForm(f => ({ ...f, locationId: v }))} required>
                 <SelectTrigger><SelectValue placeholder="Выберите кабинет" /></SelectTrigger>
                 <SelectContent>{locations.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Ответственное лицо</Label>
-              <Select value={inventoryForm.personId} onValueChange={v => setInventoryForm(f => ({ ...f, personId: v }))}>
+              <Label>Ответственное лицо *</Label>
+              <Select value={inventoryForm.personId} onValueChange={v => setInventoryForm(f => ({ ...f, personId: v }))} required>
                 <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
                 <SelectContent>{people.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Дата начала</Label>
+              <Label>Дата начала *</Label>
               <Input
                 type="date"
+                required
                 value={inventoryForm.startDate}
                 onChange={e => setInventoryForm(f => ({ ...f, startDate: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Дата окончания</Label>
+              <Label>Дата окончания *</Label>
               <Input
                 type="date"
+                required
                 value={inventoryForm.endDate}
                 onChange={e => setInventoryForm(f => ({ ...f, endDate: e.target.value }))}
               />

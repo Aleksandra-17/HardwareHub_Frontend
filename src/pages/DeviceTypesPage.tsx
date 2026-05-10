@@ -70,19 +70,23 @@ export default function DeviceTypesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                <th className="text-left pb-3 px-4 font-medium">Название</th>
-                <th className="text-left pb-3 px-4 font-medium">Код</th>
-                <th className="text-left pb-3 px-4 font-medium">Категория</th>
-                <th className="text-left pb-3 px-4 font-medium">Устройств</th>
+                <th className="text-center px-4 py-3 font-medium align-middle">Название</th>
+                <th className="text-center px-4 py-3 font-medium align-middle">Код</th>
+                <th className="text-center px-4 py-3 font-medium align-middle">Категория</th>
+                <th className="text-center px-4 py-3 font-medium align-middle">Устройств</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(t => (
                 <tr key={t.id} className="border-b border-border last:border-0 hover:bg-muted/50">
-                  <td className="py-3 px-4 font-medium">{t.name}</td>
-                  <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{t.code ?? '—'}</td>
-                  <td className="py-3 px-4"><Badge variant="secondary">{categoryLabels[t.category ?? 'other'] ?? t.category ?? '—'}</Badge></td>
-                  <td className="py-3 px-4 text-muted-foreground">{t.deviceCount ?? 0}</td>
+                  <td className="px-4 py-3 text-center align-middle font-medium">{t.name}</td>
+                  <td className="px-4 py-3 text-center align-middle font-mono text-xs text-muted-foreground">{t.code ?? '—'}</td>
+                  <td className="px-4 py-3 align-middle">
+                    <div className="flex justify-center">
+                      <Badge variant="secondary">{categoryLabels[t.category ?? 'other'] ?? t.category ?? '—'}</Badge>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-center align-middle text-muted-foreground">{t.deviceCount ?? 0}</td>
                 </tr>
               ))}
             </tbody>
@@ -98,12 +102,12 @@ export default function DeviceTypesPage() {
               <Input required value={formData.name} onChange={e => setFormData(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Код / стандарт</Label>
-              <Input value={formData.code} onChange={e => setFormData(f => ({ ...f, code: e.target.value }))} />
+              <Label>Код / стандарт *</Label>
+              <Input required minLength={1} value={formData.code} onChange={e => setFormData(f => ({ ...f, code: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Категория</Label>
-              <Select value={formData.category} onValueChange={v => setFormData(f => ({ ...f, category: v }))}>
+              <Label>Категория *</Label>
+              <Select value={formData.category} onValueChange={v => setFormData(f => ({ ...f, category: v }))} required>
                 <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
                 <SelectContent>{Object.entries(categoryLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
               </Select>

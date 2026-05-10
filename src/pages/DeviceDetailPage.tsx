@@ -5,15 +5,25 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
-import { api } from '@/lib/api';
-import type { AuditEntry } from '@/lib/types';
+import { api, ApiError } from '@/lib/api';
+import type { AuditEntry, Device } from '@/lib/types';
 import { toast } from 'sonner';
+
+function displayText(v: string | null | undefined): string {
+  return v != null && v !== '' ? v : '—';
+}
+
+function formatMoney(v: Device['purchasePrice']): string {
+  if (v == null || v === '') return '—';
+  const n = typeof v === 'string' ? Number(v) : v;
+  return Number.isFinite(n) ? `${n.toLocaleString('ru-RU')} ₽` : '—';
+}
 
 export default function DeviceDetailPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
 
-  const { data: device, isLoading: deviceLoading } = useQuery({
+  const { data: device, isLoading: deviceLoading, isError, error } = useQuery({
     queryKey: ['device', id],
     queryFn: () => api.getDevice(id!),
     enabled: !!id,
@@ -70,6 +80,16 @@ export default function DeviceDetailPage() {
     return <Skeleton className="h-96 w-full" />;
   }
 
+  if (isError) {
+    const msg = error instanceof ApiError ? String(error.message) : 'Не удалось загрузить устройство';
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-muted-foreground text-center max-w-md">{msg}</p>
+        <Button variant="ghost" asChild className="mt-4"><Link to="/devices">← Назад к списку</Link></Button>
+      </div>
+    );
+  }
+
   if (!device) return (
     <div className="flex flex-col items-center justify-center py-20">
       <p className="text-muted-foreground">Устройство не найдено</p>
@@ -81,18 +101,18 @@ export default function DeviceDetailPage() {
   const loc = locations.find(l => l.id === device.locationId);
   const per = people.find(p => p.id === device.personId);
 
-  const fields = [
+  const fields: [string, string][] = [
     ['Инвентарный №', device.inventoryNumber],
-    ['Тип', dt?.name || '—'],
-    ['Серийный №', device.serialNumber],
-    ['Модель', device.model],
-    ['Производитель', device.manufacturer],
-    ['Кабинет', loc?.name || '—'],
-    ['Ответственный', per?.fullName || '—'],
-    ['Дата ввода', device.commissionDate],
-    ['Последняя проверка', device.lastCheckDate],
-    ['Стоимость', `${device.purchasePrice.toLocaleString('ru-RU')} ₽`],
-    ['Дата покупки', device.purchaseDate],
+    ['Тип', dt?.name ?? '—'],
+    ['Серийный №', displayText(device.serialNumber)],
+    ['Модель', displayText(device.model)],
+    ['Производитель', displayText(device.manufacturer)],
+    ['Кабинет', loc?.name ?? '—'],
+    ['Ответственный', per?.fullName ?? '—'],
+    ['Дата ввода', displayText(device.commissionDate)],
+    ['Последняя проверка', displayText(device.lastCheckDate)],
+    ['Стоимость', formatMoney(device.purchasePrice)],
+    ['Дата покупки', displayText(device.purchaseDate)],
   ];
 
   return (
@@ -143,18 +163,18 @@ export default function DeviceDetailPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Информация</CardTitle></CardHeader>
         <CardContent>
-          <dl className="grid gap-3 sm:grid-cols-2">
+          <dl className="grid gap-4 sm:grid-cols-2">
             {fields.map(([label, value]) => (
-              <div key={label}>
+              <div key={label} className="text-center">
                 <dt className="text-xs text-muted-foreground">{label}</dt>
-                <dd className="font-medium">{value}</dd>
+                <dd className="mt-1 font-medium">{value}</dd>
               </div>
             ))}
           </dl>
           {device.notes && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground mb-1">Примечания</p>
-              <p>{device.notes}</p>
+            <div className="mt-4 pt-4 border-t border-border text-center">
+              <p className="mb-2 text-xs text-muted-foreground">Примечания</p>
+              <p className="mx-auto max-w-lg text-center">{device.notes}</p>
             </div>
           )}
         </CardContent>
@@ -170,17 +190,17 @@ export default function DeviceDetailPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
-                  <th className="text-left pb-2 font-medium">Дата</th>
-                  <th className="text-left pb-2 font-medium">Действие</th>
-                  <th className="text-left pb-2 font-medium">Пользователь</th>
+                  <th className="text-center px-3 py-3 font-medium align-middle">Дата</th>
+                  <th className="text-center px-3 py-3 font-medium align-middle">Действие</th>
+                  <th className="text-center px-3 py-3 font-medium align-middle">Пользователь</th>
                 </tr>
               </thead>
               <tbody>
                 {audit.map((a: AuditEntry) => (
                   <tr key={a.id} className="border-b border-border last:border-0">
-                    <td className="py-2 text-muted-foreground">{a.date}</td>
-                    <td className="py-2">{a.action}</td>
-                    <td className="py-2 text-muted-foreground">{a.user}</td>
+                    <td className="px-3 py-3 text-center align-middle text-muted-foreground">{a.date}</td>
+                    <td className="px-3 py-3 text-center align-middle">{a.action}</td>
+                    <td className="px-3 py-3 text-center align-middle text-muted-foreground">{a.user}</td>
                   </tr>
                 ))}
               </tbody>

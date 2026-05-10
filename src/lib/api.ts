@@ -1,3 +1,5 @@
+import type { Device } from '@/lib/types';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 class ApiError extends Error {
@@ -102,10 +104,10 @@ export const api = {
     if (params?.sort) queryString.append('sort', params.sort);
     if (params?.order) queryString.append('order', params.order);
     const qs = queryString.toString();
-    return request(`/devices${qs ? '?' + qs : ''}`);
+    return request<Device[]>(`/devices${qs ? '?' + qs : ''}`);
   },
 
-  getDevice: (id: string) => request(`/devices/${id}`),
+  getDevice: (id: string) => request<Device>(`/devices/${id}`),
 
   createDevice: (data: Record<string, unknown>) =>
     request('/devices', {

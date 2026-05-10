@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { StatusBadge } from '@/components/StatusBadge';
 import { api } from '@/lib/api';
 import { statusLabels } from '@/lib/labels';
-import { DeviceStatus } from '@/lib/types';
 import DeviceFormDialog from '@/components/DeviceFormDialog';
 
 const typeIcons: Record<string, React.ElementType> = {
@@ -66,8 +65,15 @@ export default function DevicesPage() {
   };
 
   const SortHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
-    <th className="text-left pb-3 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort(field)}>
-      {children} {sortField === field && (sortDir === 'asc' ? '↑' : '↓')}
+    <th className="text-center px-4 py-3 font-medium cursor-pointer align-middle select-none hover:text-foreground">
+      <button
+        type="button"
+        className="mx-auto inline-flex min-h-[2.25rem] w-full items-center justify-center gap-1 rounded-sm p-0 h-auto bg-transparent font-inherit hover:bg-transparent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        onClick={() => toggleSort(field)}
+      >
+        {children}
+        {sortField === field ? (sortDir === 'asc' ? '↑' : '↓') : null}
+      </button>
     </th>
   );
 
@@ -129,9 +135,9 @@ export default function DevicesPage() {
                 <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
                   <SortHeader field="inventoryNumber">Инв. №</SortHeader>
                   <SortHeader field="name">Название</SortHeader>
-                  <th className="text-left pb-3 font-medium">Тип</th>
-                  <th className="text-left pb-3 font-medium">Кабинет</th>
-                  <th className="text-left pb-3 font-medium">Ответственный</th>
+                  <th className="text-center px-4 py-3 font-medium align-middle">Тип</th>
+                  <th className="text-center px-4 py-3 font-medium align-middle">Кабинет</th>
+                  <th className="text-center px-4 py-3 font-medium align-middle">Ответственный</th>
                   <SortHeader field="status">Статус</SortHeader>
                   <SortHeader field="commissionDate">Дата ввода</SortHeader>
                 </tr>
@@ -144,18 +150,23 @@ export default function DevicesPage() {
                   const Icon = dt ? typeIcons[dt.name] || MonitorIcon : MonitorIcon;
                   return (
                     <tr key={d.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
-                      <td className="py-3 px-4 font-mono text-xs">{d.inventoryNumber}</td>
-                      <td className="py-3 px-4">
-                        <Link to={`/devices/${d.id}`} className="flex items-center gap-2 text-primary hover:underline">
+                      <td className="py-3 px-4 text-center align-middle font-mono text-xs">{d.inventoryNumber}</td>
+                      <td className="py-3 px-4 align-middle">
+                        <Link
+                          to={`/devices/${d.id}`}
+                          className="inline-flex w-full items-center justify-center gap-2 text-primary hover:underline"
+                        >
                           <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
                           {d.name}
                         </Link>
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground">{dt?.name}</td>
-                      <td className="py-3 px-4 text-muted-foreground">{loc?.name || '—'}</td>
-                      <td className="py-3 px-4 text-muted-foreground">{per?.fullName || '—'}</td>
-                      <td className="py-3 px-4"><StatusBadge status={d.status} /></td>
-                      <td className="py-3 px-4 text-muted-foreground">{d.commissionDate}</td>
+                      <td className="py-3 px-4 text-center align-middle text-muted-foreground">{dt?.name ?? '—'}</td>
+                      <td className="py-3 px-4 text-center align-middle text-muted-foreground">{loc?.name || '—'}</td>
+                      <td className="py-3 px-4 text-center align-middle text-muted-foreground">{per?.fullName || '—'}</td>
+                      <td className="py-3 px-4 align-middle">
+                        <div className="flex justify-center"><StatusBadge status={d.status} /></div>
+                      </td>
+                      <td className="py-3 px-4 text-center align-middle text-muted-foreground">{d.commissionDate ?? '—'}</td>
                     </tr>
                   );
                 })}

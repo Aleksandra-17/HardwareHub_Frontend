@@ -9,7 +9,6 @@ import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { api } from '@/lib/api';
 import { statusLabels } from '@/lib/labels';
-import { DeviceStatus } from '@/lib/types';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const PIE_COLORS = ['hsl(171,65%,46%)', 'hsl(210,75%,58%)', 'hsl(220,10%,55%)', 'hsl(38,92%,55%)'];
@@ -28,19 +27,24 @@ export default function DashboardPage() {
   const isLoading = devicesLoading || typesLoading;
 
   const stats = useMemo(() => {
-    const byStatus = { in_use: 0, reserve: 0, decommissioned: 0, repair: 0 };
+    const byStatus = { in_use: 0, repair: 0, scrapped: 0, archived: 0 };
     let noResponsible = 0, noLocation = 0;
     devices.forEach(d => {
-      byStatus[d.status]++;
+      if (typeof byStatus[d.status as keyof typeof byStatus] === 'number') {
+        byStatus[d.status as keyof typeof byStatus]++;
+      }
       if (!d.personId) noResponsible++;
       if (!d.locationId) noLocation++;
     });
     return { total: devices.length, byStatus, noResponsible, noLocation };
   }, [devices]);
 
-  const statusData = Object.entries(stats.byStatus).map(([key, value]) => ({
-    name: statusLabels[key], value
-  }));
+  const statusData = Object.entries(stats.byStatus)
+    .filter(([, value]) => value > 0)
+    .map(([key, value]) => ({
+      name: statusLabels[key] ?? key,
+      value,
+    }));
 
   const typeData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -51,8 +55,11 @@ export default function DashboardPage() {
     return Object.entries(map).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
   }, [devices, deviceTypes]);
 
-  const recentDevices = useMemo(() =>
-    [...devices].sort((a, b) => b.commissionDate.localeCompare(a.commissionDate)).slice(0, 5),
+  const recentDevices = useMemo(
+    () =>
+      [...devices]
+        .sort((a, b) => (b.commissionDate ?? '').localeCompare(a.commissionDate ?? ''))
+        .slice(0, 5),
     [devices],
   );
 
@@ -92,35 +99,43 @@ export default function DashboardPage() {
         <Card>
           <CardHeader><CardTitle className="text-base">По статусам</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
-                  {statusData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip
-                  content={({ active, payload }) =>
-                    active && payload?.length ? (
-                      <div
-                        className="rounded-lg border-0 px-3 py-2 text-sm shadow-md"
-                        style={{ background: 'hsl(220,18%,11%)', color: '#fff' }}
-                      >
-                        <p className="font-medium">{payload[0]?.payload?.name}</p>
-                        <p style={{ color: 'hsl(171,65%,55%)' }}>value: {payload[0]?.value}</p>
-                      </div>
-                    ) : null
-                  }
-                  cursor={false}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap gap-3 justify-center mt-2">
-              {statusData.map((s, i) => (
-                <div key={s.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} />
-                  {s.name}: {s.value}
+            {statusData.length === 0 ? (
+              <div className="flex h-[220px] items-center justify-center text-sm text-muted-foreground">
+                Нет данных по статусам
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
+                      {statusData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }) =>
+                        active && payload?.length ? (
+                          <div
+                            className="rounded-lg border-0 px-3 py-2 text-sm shadow-md"
+                            style={{ background: 'hsl(220,18%,11%)', color: '#fff' }}
+                          >
+                            <p className="font-medium">{payload[0]?.payload?.name}</p>
+                            <p style={{ color: 'hsl(171,65%,55%)' }}>value: {payload[0]?.value}</p>
+                          </div>
+                        ) : null
+                      }
+                      cursor={false}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-3 justify-center mt-2">
+                  {statusData.map((s, i) => (
+                    <div key={s.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      {s.name}: {s.value}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -169,22 +184,24 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="text-left pb-2 font-medium">Инв. №</th>
-                  <th className="text-left pb-2 font-medium">Название</th>
-                  <th className="text-left pb-2 font-medium">Статус</th>
-                  <th className="text-left pb-2 font-medium">Дата ввода</th>
+                <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
+                  <th className="text-center px-3 py-3 font-medium align-middle">Инв. №</th>
+                  <th className="text-center px-3 py-3 font-medium align-middle">Название</th>
+                  <th className="text-center px-3 py-3 font-medium align-middle">Статус</th>
+                  <th className="text-center px-3 py-3 font-medium align-middle">Дата ввода</th>
                 </tr>
               </thead>
               <tbody>
                 {recentDevices.map(d => (
                   <tr key={d.id} className="border-b border-border last:border-0">
-                    <td className="py-2.5 font-mono text-xs">{d.inventoryNumber}</td>
-                    <td className="py-2.5">
-                      <Link to={`/devices/${d.id}`} className="text-primary hover:underline">{d.name}</Link>
+                    <td className="px-3 py-3 text-center align-middle font-mono text-xs">{d.inventoryNumber}</td>
+                    <td className="px-3 py-3 align-middle text-center">
+                      <Link to={`/devices/${d.id}`} className="inline-block text-primary hover:underline">{d.name}</Link>
                     </td>
-                    <td className="py-2.5"><StatusBadge status={d.status} /></td>
-                    <td className="py-2.5 text-muted-foreground">{d.commissionDate}</td>
+                    <td className="px-3 py-3 align-middle">
+                      <div className="flex justify-center"><StatusBadge status={d.status} /></div>
+                    </td>
+                    <td className="px-3 py-3 text-center align-middle text-muted-foreground">{d.commissionDate ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>

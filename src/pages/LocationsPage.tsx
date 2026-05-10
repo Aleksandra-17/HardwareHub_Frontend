@@ -99,27 +99,31 @@ export default function LocationsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                <th className="text-left pb-3 px-4 font-medium">Кабинет</th>
-                <th className="text-left pb-3 px-4 font-medium">Здание</th>
-                <th className="text-left pb-3 px-4 font-medium">Этаж</th>
-                <th className="text-left pb-3 px-4 font-medium">Описание</th>
-                <th className="text-left pb-3 px-4 font-medium">Устройств</th>
-                <th className="w-10" />
+                <th className="text-center px-4 py-3 font-medium align-middle">Кабинет</th>
+                <th className="text-center px-4 py-3 font-medium align-middle">Здание</th>
+                <th className="text-center px-4 py-3 font-medium align-middle">Этаж</th>
+                <th className="text-center px-4 py-3 font-medium align-middle">Описание</th>
+                <th className="text-center px-4 py-3 font-medium align-middle">Устройств</th>
+                <th className="w-10 px-2 py-3 align-middle" />
               </tr>
             </thead>
             <tbody>
               {locations.map((l: Location) => (
                 <tr key={l.id} className="border-b border-border last:border-0 hover:bg-muted/50 group">
-                  <td className="py-3 px-4 font-medium">
-                    <Link to={`/devices?location=${l.id}`} className="flex items-center gap-2 text-primary hover:underline">
-                      <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />{l.name}
+                  <td className="px-4 py-3 align-middle font-medium">
+                    <Link
+                      to={`/devices?location=${l.id}`}
+                      className="inline-flex w-full items-center justify-center gap-2 text-primary hover:underline"
+                    >
+                      <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />{l.name}
                     </Link>
                   </td>
-                  <td className="py-3 px-4 text-muted-foreground">{l.building || '—'}</td>
-                  <td className="py-3 px-4 text-muted-foreground">{l.floor || '—'}</td>
-                  <td className="py-3 px-4 text-muted-foreground">{l.description || '—'}</td>
-                  <td className="py-3 px-4 font-semibold">{l.deviceCount}</td>
-                  <td className="py-3 px-4">
+                  <td className="px-4 py-3 text-center align-middle text-muted-foreground">{l.building || '—'}</td>
+                  <td className="px-4 py-3 text-center align-middle text-muted-foreground">{l.floor || '—'}</td>
+                  <td className="px-4 py-3 text-center align-middle text-muted-foreground">{l.description || '—'}</td>
+                  <td className="px-4 py-3 text-center align-middle font-semibold">{l.deviceCount}</td>
+                  <td className="px-4 py-3 align-middle">
+                    <div className="flex justify-center">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -130,6 +134,7 @@ export default function LocationsPage() {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
