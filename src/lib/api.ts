@@ -1,4 +1,4 @@
-import type { Device } from '@/lib/types';
+import type { Device, Location, Workstation } from '@/lib/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -72,11 +72,22 @@ export const api = {
     request('/device-types', { method: 'POST', body: JSON.stringify(data) }),
 
   // Locations
-  getLocations: () => request('/locations'),
+  getLocations: () => request('/locations') as Promise<Location[]>,
   createLocation: (data: Record<string, unknown>) =>
     request('/locations', { method: 'POST', body: JSON.stringify(data) }),
+  updateLocation: (id: string, data: Record<string, unknown>) =>
+    request(`/locations/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteLocation: (id: string) =>
     request(`/locations/${id}`, { method: 'DELETE' }),
+
+  getWorkstations: (locationId: string) =>
+    request(`/workstations?locationId=${encodeURIComponent(locationId)}`) as Promise<Workstation[]>,
+  createWorkstation: (data: Record<string, unknown>) =>
+    request('/workstations', { method: 'POST', body: JSON.stringify(data) }),
+  updateWorkstation: (id: string, data: Record<string, unknown>) =>
+    request(`/workstations/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteWorkstation: (id: string) =>
+    request(`/workstations/${id}`, { method: 'DELETE' }),
 
   // People
   getPeople: () => request('/people'),

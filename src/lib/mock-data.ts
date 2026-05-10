@@ -12,12 +12,12 @@ export const deviceTypes: DeviceType[] = [
 ];
 
 export const locations: Location[] = [
-  { id: 'l1', name: 'Каб. 101', building: 'Корпус А', floor: '1', description: 'Приёмная', deviceCount: 4 },
-  { id: 'l2', name: 'Каб. 205', building: 'Корпус А', floor: '2', description: 'Бухгалтерия', deviceCount: 6 },
-  { id: 'l3', name: 'Каб. 312', building: 'Корпус Б', floor: '3', description: 'Лаборатория ML', deviceCount: 8 },
-  { id: 'l4', name: 'Каб. 110', building: 'Корпус А', floor: '1', description: 'Серверная', deviceCount: 5 },
-  { id: 'l5', name: 'Каб. 401', building: 'Корпус Б', floor: '4', description: 'Конференц-зал', deviceCount: 3 },
-  { id: 'l6', name: 'Каб. 215', building: 'Корпус А', floor: '2', description: 'IT-отдел', deviceCount: 10 },
+  { id: 'l1', name: 'Каб. 101', building: 'Корпус А', floor: '1', description: 'Приёмная', workstationCapacity: 2, deviceCount: 4, computingDeviceCount: 1, workstationDeficit: 1, needsEquipment: true },
+  { id: 'l2', name: 'Каб. 205', building: 'Корпус А', floor: '2', description: 'Бухгалтерия', workstationCapacity: 4, deviceCount: 6, computingDeviceCount: 4, workstationDeficit: 0, needsEquipment: false },
+  { id: 'l3', name: 'Каб. 312', building: 'Корпус Б', floor: '3', description: 'Лаборатория ML', workstationCapacity: 8, deviceCount: 8, computingDeviceCount: 8, workstationDeficit: 0, needsEquipment: false },
+  { id: 'l4', name: 'Каб. 110', building: 'Корпус А', floor: '1', description: 'Серверная', workstationCapacity: 0, deviceCount: 5, computingDeviceCount: 3, workstationDeficit: 0, needsEquipment: false },
+  { id: 'l5', name: 'Каб. 401', building: 'Корпус Б', floor: '4', description: 'Конференц-зал', workstationCapacity: 1, deviceCount: 3, computingDeviceCount: 1, workstationDeficit: 0, needsEquipment: false },
+  { id: 'l6', name: 'Каб. 215', building: 'Корпус А', floor: '2', description: 'IT-отдел', workstationCapacity: 8, deviceCount: 10, computingDeviceCount: 9, workstationDeficit: 0, needsEquipment: false },
 ];
 
 export const people: Person[] = [

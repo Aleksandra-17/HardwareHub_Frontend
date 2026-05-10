@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
 import { statusLabels } from '@/lib/labels';
-import type { DeviceType, Location, Person } from '@/lib/types';
+import type { DeviceType, Location, Person, Workstation as WorkstationType } from '@/lib/types';
 import { toast } from 'sonner';
 
 interface Props {
@@ -18,6 +18,8 @@ interface Props {
 
 /** Значение селекта, когда ответственный не выбран (в API поле опционально). */
 const NO_PERSON_VALUE = '__no_person__';
+/** Когда место явно не выбрано (предупреждение без блокировки). */
+const NO_WORKSTATION_VALUE = '__no_workstation__';
 
 export default function DeviceFormDialog({ open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
@@ -30,6 +32,7 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
     model: '',
     manufacturer: '',
     locationId: '',
+    workstationId: '',
     personId: '',
     commissionDate: '',
     purchasePrice: '',
@@ -49,6 +52,11 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
     queryKey: ['people'],
     queryFn: () => api.getPeople() as Promise<Person[]>,
   });
+  const { data: workstations = [] } = useQuery({
+    queryKey: ['workstations', formData.locationId],
+    queryFn: () => api.getWorkstations(formData.locationId),
+    enabled: !!formData.locationId,
+  });
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => api.createDevice(data),
@@ -65,6 +73,7 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
         model: '',
         manufacturer: '',
         locationId: '',
+        workstationId: '',
         personId: '',
         commissionDate: '',
         purchasePrice: '',
@@ -77,9 +86,16 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { purchasePrice, personId, commissionDate, purchaseDate, ...rest } = formData;
+    if (formData.locationId && !formData.workstationId) {
+      toast.warning(
+        'Кабинет выбран без рабочего места. Рекомендуется указать позже в карточке устройства.',
+        { duration: 6000 },
+      );
+    }
+    const { purchasePrice, personId, commissionDate, purchaseDate, workstationId, ...rest } = formData;
     createMutation.mutate({
       ...rest,
+      ...(workstationId ? { workstationId } : {}),
       ...(purchasePrice ? { purchasePrice: Number(purchasePrice) } : {}),
       ...(personId ? { personId } : {}),
       ...(commissionDate ? { commissionDate } : {}),
@@ -150,10 +166,43 @@ export default function DeviceFormDialog({ open, onOpenChange }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label>Кабинет *</Label>
-            <Select value={formData.locationId} onValueChange={v => setFormData(f => ({ ...f, locationId: v }))} required>
+            <Select
+              value={formData.locationId}
+              onValueChange={v =>
+                setFormData(f => ({ ...f, locationId: v, workstationId: '' }))
+              }
+              required
+            >
               <SelectTrigger><SelectValue placeholder="Выберите кабинет" /></SelectTrigger>
               <SelectContent>{locations.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Рабочее место</Label>
+            <Select
+              value={formData.workstationId || NO_WORKSTATION_VALUE}
+              onValueChange={v =>
+                setFormData(f => ({
+                  ...f,
+                  workstationId: v === NO_WORKSTATION_VALUE ? '' : v,
+                }))
+              }
+              disabled={!formData.locationId}
+            >
+              <SelectTrigger><SelectValue placeholder={formData.locationId ? 'Выберите место' : 'Сначала кабинет'} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_WORKSTATION_VALUE}>Не указано</SelectItem>
+                {workstations.map((w: WorkstationType) => (
+                  <SelectItem key={w.id} value={w.id}>
+                    {w.seatCode}
+                    {w.employeeInternalEmail ? ` (${w.employeeInternalEmail})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Управление списком мест — на странице «Кабинеты», кнопка с иконкой слоёв в строке кабинета.
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label>Ответственный</Label>

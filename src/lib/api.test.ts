@@ -12,7 +12,15 @@ describe('api', () => {
   it('has locations CRUD methods', () => {
     expect(typeof api.getLocations).toBe('function');
     expect(typeof api.createLocation).toBe('function');
+    expect(typeof api.updateLocation).toBe('function');
     expect(typeof api.deleteLocation).toBe('function');
+  });
+
+  it('has workstations API', () => {
+    expect(typeof api.getWorkstations).toBe('function');
+    expect(typeof api.createWorkstation).toBe('function');
+    expect(typeof api.updateWorkstation).toBe('function');
+    expect(typeof api.deleteWorkstation).toBe('function');
   });
 
   it('has people CRUD methods', () => {

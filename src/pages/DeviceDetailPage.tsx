@@ -108,6 +108,7 @@ export default function DeviceDetailPage() {
     ['Модель', displayText(device.model)],
     ['Производитель', displayText(device.manufacturer)],
     ['Кабинет', loc?.name ?? '—'],
+    ['Рабочее место', displayText(device.workstationSeatCode ?? null)],
     ['Ответственный', per?.fullName ?? '—'],
     ['Дата ввода', displayText(device.commissionDate)],
     ['Последняя проверка', displayText(device.lastCheckDate)],

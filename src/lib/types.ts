@@ -10,13 +10,35 @@ export interface DeviceType {
   deviceCount: number;
 }
 
+export interface WorkstationRequirement {
+  id: string;
+  deviceTypeId: string;
+  deviceTypeName?: string;
+  quantity: number;
+}
+
+export interface Workstation {
+  id: string;
+  locationId: string;
+  seatCode: string;
+  employeeInternalEmail: string | null;
+  requirements: WorkstationRequirement[];
+}
+
 export interface Location {
   id: string;
   name: string;
-  building: string;
-  floor: string;
-  description: string;
+  building: string | null;
+  floor: string | null;
+  description: string | null;
+  /** Плановое число рабочих мест в кабинете */
+  workstationCapacity: number;
   deviceCount: number;
+  /** Устройства с типом категории computing (ПК, ноутбук и т.п.) */
+  computingDeviceCount: number;
+  /** Сколько не хватает до плана (если план > 0) */
+  workstationDeficit: number;
+  needsEquipment: boolean;
 }
 
 export interface Person {
@@ -39,6 +61,8 @@ export interface Device {
   manufacturer: string | null;
   status: DeviceStatus;
   locationId: string | null;
+  workstationId?: string | null;
+  workstationSeatCode?: string | null;
   personId: string | null;
   commissionDate: string | null;
   lastCheckDate: string | null;
