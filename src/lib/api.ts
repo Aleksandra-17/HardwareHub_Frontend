@@ -44,6 +44,47 @@ async function request<T>(
   return response.json();
 }
 
+/** POST-запрос с бинарным ответом (экспорт отчётов). */
+async function downloadReportFile(
+  endpoint: string,
+  body: Record<string, unknown>,
+): Promise<{ blob: Blob; filename: string }> {
+  const url = `${API_URL}${endpoint}`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  const accessToken = localStorage.getItem('access_token');
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new ApiError(response.status, errorData.detail || `HTTP ${response.status}`);
+  }
+  const dispo = response.headers.get('Content-Disposition');
+  let filename = 'export';
+  if (dispo) {
+    const m = /filename="([^"]+)"/.exec(dispo) ?? /filename=([^;\s]+)/.exec(dispo);
+    if (m) filename = m[1].replace(/"/g, '');
+  }
+  const blob = await response.blob();
+  return { blob, filename };
+}
+
+export function saveReportBlob(blob: Blob, filename: string): void {
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = objectUrl;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(objectUrl);
+}
+
 export const api = {
   // Auth
   login: (username: string, password: string) =>
@@ -159,11 +200,14 @@ export const api = {
     }),
 
   // Reports
-  exportDevices: (format: 'csv' | 'xlsx', params?: { locationId?: string; personId?: string }) =>
-    request('/reports/devices/export', {
-      method: 'POST',
-      body: JSON.stringify({ format, ...params }),
-    }),
+  downloadDevicesExport: (format: 'csv' | 'xlsx', params?: { locationId?: string; personId?: string }) =>
+    downloadReportFile('/reports/devices/export', { format, ...params }),
+
+  downloadLicensesExport: (format: 'csv' | 'xlsx') =>
+    downloadReportFile('/reports/licenses/export', { format }),
+
+  downloadComponentsExport: (format: 'csv' | 'xlsx', params?: { locationId?: string }) =>
+    downloadReportFile('/reports/components/export', { format, ...params }),
 
   generateInventoryReport: (data: Record<string, unknown>) =>
     request('/reports/inventory', {

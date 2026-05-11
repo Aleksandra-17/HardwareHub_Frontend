@@ -40,7 +40,9 @@ describe('api', () => {
 
   it('has device types and reports', () => {
     expect(typeof api.getDeviceTypes).toBe('function');
-    expect(typeof api.exportDevices).toBe('function');
+    expect(typeof api.downloadDevicesExport).toBe('function');
+    expect(typeof api.downloadLicensesExport).toBe('function');
+    expect(typeof api.downloadComponentsExport).toBe('function');
     expect(typeof api.generateInventoryReport).toBe('function');
   });
 });

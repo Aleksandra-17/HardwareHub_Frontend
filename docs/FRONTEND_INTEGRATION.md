@@ -87,7 +87,7 @@ export default function DashboardPage() {
 | DeviceTypesPage | `deviceTypes` | `getDeviceTypes()` | Простой запрос |
 | LocationsPage | `locations` | `getLocations()` | Простой запрос |
 | PeoplePage | `people` | `getPeople()` | Простой запрос |
-| ReportsPage | `locations`, `people` | `getLocations()`, `getPeople()` + экспорт | Экспорт → window.open() на `api.exportDevices()` |
+| ReportsPage | `locations`, `people` | `getLocations()`, `getPeople()` + отчёты | Экспорт: `downloadDevicesExport` / `downloadLicensesExport` / `downloadComponentsExport` → `{ blob, filename }` + `saveReportBlob()`; акт: `generateInventoryReport()` |
 | DeviceFormDialog | mock-сохранение | `createDevice(data)`, `updateDevice(id, data)` | Оптимистичное обновление через React Query |
 
 ---
@@ -191,28 +191,43 @@ try {
 
 ## Шаг 6: Экспорт и отчёты
 
-**Для экспорта CSV/XLSX:**
-```typescript
-const handleExport = (format: 'csv' | 'xlsx') => {
-  const url = api.exportDevices(format);
-  window.open(url, '_blank');
-};
+Бэкенд принимает формат **`csv` или `xlsx`** (не `excel`). Файлы приходят телом ответа; сохраняйте blob после POST с авторизацией.
 
-// В компоненте:
-<Button onClick={() => handleExport('csv')}>Экспорт CSV</Button>
+**Экспорт устройств (фильтры опциональны):**
+```typescript
+import { saveReportBlob } from '@/lib/api';
+
+const handleExportDevices = async (format: 'csv' | 'xlsx') => {
+  const { blob, filename } = await api.downloadDevicesExport(format, {
+    ...(cabinetId ? { locationId: cabinetId } : {}),
+    ...(responsibleId ? { personId: responsibleId } : {}),
+  });
+  saveReportBlob(blob, filename);
+};
 ```
 
-**Для акта инвентаризации:**
+**Экспорт лицензий и комплектующих:**
+```typescript
+const { blob, filename } = await api.downloadLicensesExport('xlsx');
+saveReportBlob(blob, filename);
+
+const { blob: blob2, filename: fn2 } = await api.downloadComponentsExport('csv', {
+  ...(hostCabinetId ? { locationId: hostCabinetId } : {}),
+});
+saveReportBlob(blob2, fn2);
+```
+
+**Акт инвентаризации (JSON):**
 ```typescript
 const handleCreateReport = async () => {
   try {
-    const result = await api.createInventoryReport({
+    const result = await api.generateInventoryReport({
       locationId: selectedLocation,
       personId: selectedPerson,
-      dateFrom: startDate,
-      dateTo: endDate,
+      startDate,
+      endDate,
     });
-    // результат — файл или ID для скачивания
+    // result: documentNumber, deviceCount, startDate, endDate, строки с типом и рабочим местом (см. схему API)
   } catch (error) {
     console.error(error);
   }
