@@ -51,6 +51,14 @@ export interface Person {
   deviceCount: number;
 }
 
+export interface License {
+  id: string;
+  name: string;
+  price: number | string;
+  expiresAt: string;
+  details?: string | null;
+}
+
 export interface Device {
   id: string;
   inventoryNumber: string;

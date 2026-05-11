@@ -11,6 +11,7 @@ import DashboardPage from "@/pages/DashboardPage";
 import DevicesPage from "@/pages/DevicesPage";
 import DeviceDetailPage from "@/pages/DeviceDetailPage";
 import DeviceTypesPage from "@/pages/DeviceTypesPage";
+import LicensesPage from "@/pages/LicensesPage";
 import LocationsPage from "@/pages/LocationsPage";
 import PeoplePage from "@/pages/PeoplePage";
 import ReportsPage from "@/pages/ReportsPage";
@@ -45,6 +46,7 @@ function AppRoutes() {
                 <Route path="/devices" element={<DevicesPage />} />
                 <Route path="/devices/:id" element={<DeviceDetailPage />} />
                 <Route path="/device-types" element={<DeviceTypesPage />} />
+                <Route path="/licenses" element={<LicensesPage />} />
                 <Route path="/locations" element={<LocationsPage />} />
                 <Route path="/people" element={<PeoplePage />} />
                 <Route path="/reports" element={<ReportsPage />} />

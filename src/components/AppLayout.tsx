@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Monitor, Layers, MapPin, Users, FileText, Settings,
+  LayoutDashboard, Monitor, Layers, KeyRound, MapPin, Users, FileText, Settings,
   Search, Moon, Sun, Menu, X, ChevronLeft, LogOut
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { label: 'Устройства', icon: Monitor, path: '/devices' },
   { label: 'Виды техники', icon: Layers, path: '/device-types' },
+  { label: 'Лицензии', icon: KeyRound, path: '/licenses' },
   { label: 'Кабинеты', icon: MapPin, path: '/locations' },
   { label: 'Ответственные', icon: Users, path: '/people' },
   { label: 'Отчёты', icon: FileText, path: '/reports' },

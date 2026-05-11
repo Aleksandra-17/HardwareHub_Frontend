@@ -1,4 +1,4 @@
-import type { Device, Location, Workstation } from '@/lib/types';
+import type { Device, License, Location, Workstation } from '@/lib/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -95,6 +95,15 @@ export const api = {
     request('/people', { method: 'POST', body: JSON.stringify(data) }),
   deletePerson: (id: string) =>
     request(`/people/${id}`, { method: 'DELETE' }),
+
+  // Licenses
+  getLicenses: () => request('/licenses') as Promise<License[]>,
+  createLicense: (data: Record<string, unknown>) =>
+    request('/licenses', { method: 'POST', body: JSON.stringify(data) }),
+  updateLicense: (id: string, data: Record<string, unknown>) =>
+    request(`/licenses/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteLicense: (id: string) =>
+    request(`/licenses/${id}`, { method: 'DELETE' }),
 
   // Devices
   getDevices: (params?: {
