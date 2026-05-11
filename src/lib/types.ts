@@ -5,7 +5,7 @@ export interface DeviceType {
   id: string;
   name: string;
   code: string;
-  category: 'computing' | 'office' | 'network' | 'other';
+  category: 'computing' | 'office' | 'network' | 'peripheral' | 'other';
   description: string;
   deviceCount: number;
 }
@@ -78,6 +78,30 @@ export interface Device {
   purchasePrice: number | string | null;
   purchaseDate: string | null;
   qrCode: string | null;
+  components?: Component[];
+}
+
+export type ComponentType = 'cpu' | 'motherboard' | 'ram' | 'storage' | 'psu' | 'gpu' | 'case' | 'cooler';
+
+export interface Component {
+  id: string;
+  name: string;
+  componentType: ComponentType;
+  status: DeviceStatus;
+  arrivalDate: string | null;
+  expiryDate: string | null;
+  notes: string | null;
+  linkedComputerId: string | null;
+}
+
+export interface ComponentCreateInput {
+  name: string;
+  componentType: ComponentType;
+  status: DeviceStatus;
+  arrivalDate?: string;
+  expiryDate?: string;
+  notes?: string;
+  linkedComputerId?: string;
 }
 
 export interface AuditEntry {

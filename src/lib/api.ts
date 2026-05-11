@@ -1,4 +1,4 @@
-import type { Device, License, Location, Workstation } from '@/lib/types';
+import type { Component, Device, License, Location, Workstation } from '@/lib/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -140,6 +140,11 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+  rebuildDevice: (id: string, items: Array<{ componentId: string; componentType: string }>) =>
+    request(`/devices/${id}/rebuild`, {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    }),
 
   deleteDevice: (id: string) =>
     request(`/devices/${id}`, {
@@ -164,6 +169,30 @@ export const api = {
     request('/reports/inventory', {
       method: 'POST',
       body: JSON.stringify(data),
+    }),
+
+  // Components
+  getComponents: (params?: { computerId?: string }) => {
+    const queryString = new URLSearchParams();
+    if (params?.computerId) queryString.append('computerId', params.computerId);
+    const qs = queryString.toString();
+    return request<Component[]>(`/components${qs ? '?' + qs : ''}`);
+  },
+  createComponent: (data: Record<string, unknown>) =>
+    request('/components', { method: 'POST', body: JSON.stringify(data) }),
+  updateComponent: (id: string, data: Record<string, unknown>) =>
+    request(`/components/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteComponent: (id: string) =>
+    request(`/components/${id}`, { method: 'DELETE' }),
+  attachComponent: (id: string, computerId: string) =>
+    request(`/components/${id}/attach`, {
+      method: 'POST',
+      body: JSON.stringify({ computerId }),
+    }),
+  detachComponent: (id: string) =>
+    request(`/components/${id}/detach`, {
+      method: 'POST',
+      body: JSON.stringify({}),
     }),
 
   // Health

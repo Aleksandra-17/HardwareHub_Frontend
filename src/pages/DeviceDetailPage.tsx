@@ -1,12 +1,17 @@
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Wrench, QrCode } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/StatusBadge';
 import { api, ApiError } from '@/lib/api';
-import type { AuditEntry, Device } from '@/lib/types';
+import { componentTypeLabels } from '@/lib/labels';
+import type { AuditEntry, ComponentType, Device } from '@/lib/types';
 import { toast } from 'sonner';
 
 function displayText(v: string | null | undefined): string {
@@ -22,6 +27,8 @@ function formatMoney(v: Device['purchasePrice']): string {
 export default function DeviceDetailPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const [rebuildOpen, setRebuildOpen] = useState(false);
+  const [selectedByType, setSelectedByType] = useState<Record<string, string>>({});
 
   const { data: device, isLoading: deviceLoading, isError, error } = useQuery({
     queryKey: ['device', id],
@@ -49,6 +56,10 @@ export default function DeviceDetailPage() {
     queryKey: ['people'],
     queryFn: () => api.getPeople(),
   });
+  const { data: allComponents = [] } = useQuery({
+    queryKey: ['components'],
+    queryFn: () => api.getComponents(),
+  });
 
   const sendToRepairMutation = useMutation({
     mutationFn: () => api.updateDevice(id!, { status: 'repair' }),
@@ -75,6 +86,32 @@ export default function DeviceDetailPage() {
     onSuccess: () => toast.success('QR-код сгенерирован'),
     onError: (err: Error) => toast.error(err.message),
   });
+  const rebuildMutation = useMutation({
+    mutationFn: (items: Array<{ componentId: string; componentType: string }>) => api.rebuildDevice(id!, items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['device', id] });
+      queryClient.invalidateQueries({ queryKey: ['components'] });
+      queryClient.invalidateQueries({ queryKey: ['deviceAudit', id] });
+      toast.success('Сборка ПК обновлена');
+      setRebuildOpen(false);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const dt = deviceTypes.find(t => t.id === device?.deviceTypeId);
+  const isComponentsHost = (() => {
+    if (!dt) return false;
+    const code = (dt.code ?? '').toUpperCase();
+    const name = (dt.name ?? '').trim().toLowerCase();
+    return code === 'PC' || code === 'SRV' || name === 'пк' || name === 'сервер';
+  })();
+  const slots = Object.keys(componentTypeLabels) as ComponentType[];
+  useEffect(() => {
+    if (!device?.components) return;
+    const next: Record<string, string> = {};
+    for (const comp of device.components) next[comp.componentType] = comp.id;
+    setSelectedByType(next);
+  }, [device?.id, device?.components]);
 
   if (deviceLoading) {
     return <Skeleton className="h-96 w-full" />;
@@ -97,13 +134,13 @@ export default function DeviceDetailPage() {
     </div>
   );
 
-  const dt = deviceTypes.find(t => t.id === device.deviceTypeId);
+  const dtLive = deviceTypes.find(t => t.id === device.deviceTypeId);
   const loc = locations.find(l => l.id === device.locationId);
   const per = people.find(p => p.id === device.personId);
 
   const fields: [string, string][] = [
     ['Инвентарный №', device.inventoryNumber],
-    ['Тип', dt?.name ?? '—'],
+    ['Тип', dtLive?.name ?? '—'],
     ['Серийный №', displayText(device.serialNumber)],
     ['Модель', displayText(device.model)],
     ['Производитель', displayText(device.manufacturer)],
@@ -158,6 +195,11 @@ export default function DeviceDetailPage() {
           <QrCode className="h-4 w-4 mr-1" />
           {qrCodeMutation.isPending ? 'Генерация…' : 'QR-код'}
         </Button>
+        {isComponentsHost && (
+          <Button variant="outline" size="sm" onClick={() => setRebuildOpen(true)}>
+            Пересобрать ПК
+          </Button>
+        )}
       </div>
 
       {/* Details */}
@@ -180,6 +222,35 @@ export default function DeviceDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {isComponentsHost && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Комплектующие</CardTitle></CardHeader>
+          <CardContent>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-center px-3 py-3 font-medium align-middle">Тип</th>
+                  <th className="text-center px-3 py-3 font-medium align-middle">Название</th>
+                  <th className="text-center px-3 py-3 font-medium align-middle">Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                {slots.map(slot => {
+                  const comp = device.components?.find(c => c.componentType === slot);
+                  return (
+                    <tr key={slot} className="border-b border-border last:border-0">
+                      <td className="px-3 py-3 text-center align-middle">{componentTypeLabels[slot]}</td>
+                      <td className="px-3 py-3 text-center align-middle">{comp?.name ?? '—'}</td>
+                      <td className="px-3 py-3 text-center align-middle text-muted-foreground">{comp ? comp.status : '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Audit */}
       <Card>
@@ -209,6 +280,54 @@ export default function DeviceDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={rebuildOpen} onOpenChange={setRebuildOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Пересборка ПК</DialogTitle></DialogHeader>
+          <div className="grid gap-3">
+            {slots.map(slot => {
+              const options = allComponents.filter(
+                c => c.componentType === slot && (!c.linkedComputerId || c.linkedComputerId === device.id),
+              );
+              return (
+                <div key={slot} className="space-y-1.5">
+                  <Label>{componentTypeLabels[slot]}</Label>
+                  <Select
+                    value={selectedByType[slot] || '__none__'}
+                    onValueChange={v =>
+                      setSelectedByType(prev => ({
+                        ...prev,
+                        [slot]: v === '__none__' ? '' : v,
+                      }))
+                    }
+                  >
+                    <SelectTrigger><SelectValue placeholder="Не выбрано" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Не установлено</SelectItem>
+                      {options.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            })}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="ghost" onClick={() => setRebuildOpen(false)}>Отмена</Button>
+              <Button
+                type="button"
+                disabled={rebuildMutation.isPending}
+                onClick={() => {
+                  const items = slots
+                    .map(slot => ({ componentId: selectedByType[slot], componentType: slot }))
+                    .filter(x => !!x.componentId) as Array<{ componentId: string; componentType: string }>;
+                  rebuildMutation.mutate(items);
+                }}
+              >
+                {rebuildMutation.isPending ? 'Сохранение…' : 'Сохранить сборку'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
