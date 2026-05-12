@@ -14,6 +14,23 @@ import { componentTypeLabels } from '@/lib/labels';
 import type { AuditEntry, ComponentType, Device } from '@/lib/types';
 import { toast } from 'sonner';
 
+function downloadDataUriPng(dataUri: string, filename: string): void {
+  void fetch(dataUri)
+    .then(r => r.blob())
+    .then(blob => {
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    })
+    .catch(() => toast.error('Не удалось подготовить файл для скачивания'));
+}
+
 function displayText(v: string | null | undefined): string {
   return v != null && v !== '' ? v : '—';
 }
@@ -28,6 +45,8 @@ export default function DeviceDetailPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [rebuildOpen, setRebuildOpen] = useState(false);
+  const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
+  const [qrPreviewUri, setQrPreviewUri] = useState<string | null>(null);
   const [selectedByType, setSelectedByType] = useState<Record<string, string>>({});
 
   const { data: device, isLoading: deviceLoading, isError, error } = useQuery({
@@ -83,7 +102,11 @@ export default function DeviceDetailPage() {
 
   const qrCodeMutation = useMutation({
     mutationFn: () => api.generateQRCode(id!),
-    onSuccess: () => toast.success('QR-код сгенерирован'),
+    onSuccess: data => {
+      setQrPreviewUri(data.qrCode);
+      setQrPreviewOpen(true);
+      toast.success('QR-код готов');
+    },
     onError: (err: Error) => toast.error(err.message),
   });
   const rebuildMutation = useMutation({
@@ -280,6 +303,40 @@ export default function DeviceDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={qrPreviewOpen}
+        onOpenChange={open => {
+          setQrPreviewOpen(open);
+          if (!open) setQrPreviewUri(null);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>QR-код устройства</DialogTitle>
+          </DialogHeader>
+          {qrPreviewUri ? (
+            <div className="flex flex-col items-center gap-4">
+              <div className="rounded-lg border border-border bg-white p-3">
+                <img src={qrPreviewUri} alt="QR-код" className="h-48 w-48 object-contain" width={192} height={192} />
+              </div>
+              <p className="text-center text-xs text-muted-foreground">
+                Содержит инвентарный номер: <span className="font-mono">{device.inventoryNumber}</span>
+              </p>
+              <Button
+                type="button"
+                className="w-full"
+                onClick={() => {
+                  const safe = device.inventoryNumber.replace(/[^\w.-]+/g, '_') || 'device';
+                  downloadDataUriPng(qrPreviewUri, `qr-${safe}.png`);
+                }}
+              >
+                Скачать PNG
+              </Button>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={rebuildOpen} onOpenChange={setRebuildOpen}>
         <DialogContent className="max-w-lg">

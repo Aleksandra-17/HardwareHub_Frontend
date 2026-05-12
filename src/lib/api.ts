@@ -195,7 +195,7 @@ export const api = {
   getDeviceAudit: (id: string) => request(`/devices/${id}/audit`),
 
   generateQRCode: (id: string) =>
-    request(`/devices/${id}/qr-code`, {
+    request<{ qrCode: string }>(`/devices/${id}/qr-code`, {
       method: 'POST',
     }),
 
