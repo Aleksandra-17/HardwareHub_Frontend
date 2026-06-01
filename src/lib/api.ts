@@ -177,7 +177,7 @@ export const api = {
     }),
 
   updateDevice: (id: string, data: Record<string, unknown>) =>
-    request(`/devices/${id}`, {
+    request<Device>(`/devices/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),

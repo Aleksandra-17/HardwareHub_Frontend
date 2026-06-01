@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, Wrench, QrCode } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Edit, Trash2, Wrench, QrCode } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,21 +80,34 @@ export default function DeviceDetailPage() {
     queryFn: () => api.getComponents(),
   });
 
+  const applyDeviceUpdate = (updated: Device) => {
+    queryClient.setQueryData(['device', id], updated);
+    void queryClient.invalidateQueries({ queryKey: ['devices'] });
+    void queryClient.invalidateQueries({ queryKey: ['deviceAudit', id] });
+  };
+
   const sendToRepairMutation = useMutation({
     mutationFn: () => api.updateDevice(id!, { status: 'repair' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['device', id] });
-      queryClient.invalidateQueries({ queryKey: ['deviceAudit', id] });
+    onSuccess: updated => {
+      applyDeviceUpdate(updated);
       toast.success('Устройство отправлено на ремонт');
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const returnToUseMutation = useMutation({
+    mutationFn: () => api.updateDevice(id!, { status: 'in_use' }),
+    onSuccess: updated => {
+      applyDeviceUpdate(updated);
+      toast.success('Устройство возвращено в эксплуатацию');
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
   const scrappedMutation = useMutation({
     mutationFn: () => api.updateDevice(id!, { status: 'scrapped' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['device', id] });
-      queryClient.invalidateQueries({ queryKey: ['deviceAudit', id] });
+    onSuccess: updated => {
+      applyDeviceUpdate(updated);
       toast.success('Устройство списано');
     },
     onError: (err: Error) => toast.error(err.message),
@@ -161,6 +174,11 @@ export default function DeviceDetailPage() {
   const loc = locations.find(l => l.id === device.locationId);
   const per = people.find(p => p.id === device.personId);
 
+  const deviceStatus = device.status;
+  const isInUse = deviceStatus === 'in_use';
+  const isRepair = deviceStatus === 'repair';
+  const isTerminal = deviceStatus === 'scrapped' || deviceStatus === 'archived';
+
   const fields: [string, string][] = [
     ['Инвентарный №', device.inventoryNumber],
     ['Тип', dtLive?.name ?? '—'],
@@ -190,35 +208,52 @@ export default function DeviceDetailPage() {
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" disabled><Edit className="h-4 w-4 mr-1" />Редактировать</Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => sendToRepairMutation.mutate()}
-          disabled={sendToRepairMutation.isPending}
-        >
-          <Wrench className="h-4 w-4 mr-1" />
-          {sendToRepairMutation.isPending ? 'Отправка…' : 'На ремонт'}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-destructive"
-          onClick={() => scrappedMutation.mutate()}
-          disabled={scrappedMutation.isPending}
-        >
-          <Trash2 className="h-4 w-4 mr-1" />
-          {scrappedMutation.isPending ? 'Списание…' : 'Списать'}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => qrCodeMutation.mutate()}
-          disabled={qrCodeMutation.isPending}
-        >
-          <QrCode className="h-4 w-4 mr-1" />
-          {qrCodeMutation.isPending ? 'Генерация…' : 'QR-код'}
-        </Button>
-        {isComponentsHost && (
+        {isInUse && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => sendToRepairMutation.mutate()}
+            disabled={sendToRepairMutation.isPending}
+          >
+            <Wrench className="h-4 w-4 mr-1" />
+            {sendToRepairMutation.isPending ? 'Отправка…' : 'На ремонт'}
+          </Button>
+        )}
+        {isRepair && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => returnToUseMutation.mutate()}
+            disabled={returnToUseMutation.isPending}
+          >
+            <CheckCircle2 className="h-4 w-4 mr-1" />
+            {returnToUseMutation.isPending ? 'Возврат…' : 'Вернуть в эксплуатацию'}
+          </Button>
+        )}
+        {(isInUse || isRepair) && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive"
+            onClick={() => scrappedMutation.mutate()}
+            disabled={scrappedMutation.isPending}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            {scrappedMutation.isPending ? 'Списание…' : 'Списать'}
+          </Button>
+        )}
+        {!isTerminal && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => qrCodeMutation.mutate()}
+            disabled={qrCodeMutation.isPending}
+          >
+            <QrCode className="h-4 w-4 mr-1" />
+            {qrCodeMutation.isPending ? 'Генерация…' : 'QR-код'}
+          </Button>
+        )}
+        {isComponentsHost && isInUse && (
           <Button variant="outline" size="sm" onClick={() => setRebuildOpen(true)}>
             Пересобрать ПК
           </Button>
